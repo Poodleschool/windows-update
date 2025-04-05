@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="fontdec.css">
     <link rel="stylesheet" href="style.css">
 </head>
-<button id="goFullscreen">Go Fullscreen</button>
 
 <script>
+Element.requestFullscreen()
 const fsElement = document.documentElement;
 let escHoldStart = null;
 let escTimeout = null;
