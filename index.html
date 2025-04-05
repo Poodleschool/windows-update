@@ -1,60 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows Update</title>
-    <link rel="stylesheet" href="fontdec.css">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Windows Update</title>
+  <link rel="stylesheet" href="fontdec.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    #startOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      z-index: 9999;
+      font-family: sans-serif;
+    }
+  </style>
 </head>
 
-<script>
-Element.requestFullscreen()
-const fsElement = document.documentElement;
-let escHoldStart = null;
-let escTimeout = null;
-
-document.getElementById("goFullscreen").onclick = () => {
-  fsElement.requestFullscreen();
-};
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !escHoldStart) {
-    escHoldStart = performance.now();
-    escTimeout = setTimeout(() => {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      }
-    }, 1000); // 1 second hold to exit
-  }
-});
-
-document.addEventListener("keyup", (e) => {
-  if (e.key === "Escape") {
-    clearTimeout(escTimeout);
-    escHoldStart = null;
-  }
-});
-</script>
-
 <body oncontextmenu="return false;" class="contrast-bg">
+  <!-- Start Overlay -->
+  <div id="startOverlay">Click any key to start</div>
 
-    <div class="spinner contrast-el"></div>
+  <!-- Your main content -->
+  <div class="spinner contrast-el"></div>
 
-    <div class="updateprog">
+  <div class="updateprog">
+    <h2 class="percent contrast-el">Working on Updates</h2>
+  </div>
 
-        <h2 class="percent contrast-el">Working on Updates </h2>
+  <h2 class="contrast-el">Please keep your computer on.</h2>
 
-    </div>
+  <!-- Fullscreen & ESC Hold Script -->
+  <script>
+    const fsElement = document.documentElement;
+    const startOverlay = document.getElementById("startOverlay");
+    let escHoldStart = null;
+    let escTimeout = null;
+    let hasStarted = false;
 
-    <h2 class="contrast-el">Please keep your computer on.</h2>
+    function startExperience() {
+      if (!hasStarted) {
+        hasStarted = true;
+        // Hide the overlay
+        startOverlay.style.display = "none";
 
-    <!-- script time -->
+        // Request fullscreen
+        if (fsElement.requestFullscreen) {
+          fsElement.requestFullscreen().catch(err => {
+            console.warn("Fullscreen error:", err);
+          });
+        }
+      }
+    }
 
-    <script src="src/spinner.js"></script>
-    <script src="src/percent.js"></script>
-    <script src="src/trap.js"></script>
+    // Listen for first interaction
+    window.addEventListener("click", startExperience, { once: true });
+    window.addEventListener("keydown", startExperience, { once: true });
+
+    // ESC hold to exit fullscreen
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !escHoldStart) {
+        escHoldStart = performance.now();
+        escTimeout = setTimeout(() => {
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          }
+        }, 1000);
+      }
+    });
+
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Escape") {
+        clearTimeout(escTimeout);
+        escHoldStart = null;
+      }
+    });
+  </script>
+
+  <!-- Your other scripts -->
+  <script src="src/spinner.js"></script>
+  <script src="src/percent.js"></script>
+  <script src="src/trap.js"></script>
 </body>
-
 </html>
