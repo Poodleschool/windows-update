@@ -4,99 +4,112 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Windows Update</title>
-  <link rel="stylesheet" href="fontdec.css" />
-  <link rel="stylesheet" href="style.css" />
   <style>
-    #startOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+    html, body {
+      margin: 0;
+      padding: 0;
       background: black;
       color: white;
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+
+    #startOverlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: black;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 2rem;
       z-index: 9999;
-      font-family: sans-serif;
+    }
+
+    #content {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hidden-iframe {
+      position: absolute;
+      top: -1000px;
+      left: -1000px;
+      width: 1px;
+      height: 1px;
+      border: none;
+      opacity: 0;
+      pointer-events: none;
     }
   </style>
 </head>
+<body>
 
-<body oncontextmenu="return false;" class="contrast-bg">
-  <!-- Start Overlay -->
-  <div id="startOverlay">Click any key to start</div>
+  <div id="startOverlay">Click or press any key to start</div>
 
-  <!-- Your main content -->
-  <div class="spinner contrast-el"></div>
-
-  <div class="updateprog">
-    <h2 class="percent contrast-el">Working on Updates</h2>
+  <div id="content">
+    <h2>Working on Updates</h2>
+    <p>Please keep your computer on.</p>
   </div>
 
-  <h2 class="contrast-el">Please keep your computer on.</h2>
+  <!-- Hidden iframe to trap focus and prevent esc auto-exit -->
+  <iframe class="hidden-iframe" tabindex="-1"></iframe>
 
-  <!-- Scripts -->
   <script>
-    const fsElement = document.documentElement;
-    const startOverlay = document.getElementById("startOverlay");
-    let escHoldStart = null;
-    let escTimeout = null;
-    let hasStarted = false;
+    const overlay = document.getElementById("startOverlay");
+    const content = document.getElementById("content");
+    const container = document.documentElement;
+    let escStart = null;
+    let escTimer = null;
 
-    // ESC Hold Logic
-    function setupEscHoldListener() {
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && !escHoldStart) {
-          escHoldStart = performance.now();
-          escTimeout = setTimeout(() => {
-            if (document.fullscreenElement) {
-              document.exitFullscreen();
-            }
-          }, 1000); // Hold for 1 second
-        }
-      });
+    async function startFullscreen() {
+      overlay.style.display = "none";
+      content.style.display = "flex";
 
-      document.addEventListener("keyup", (e) => {
-        if (e.key === "Escape") {
-          clearTimeout(escTimeout);
-          escHoldStart = null;
-        }
-      });
-    }
-
-    // Start Experience (on first interaction)
-    function startExperience() {
-      if (!hasStarted) {
-        hasStarted = true;
-        startOverlay.style.display = "none";
-
-        // Enter fullscreen
-        fsElement.requestFullscreen().catch(err => {
-          console.warn("Fullscreen error:", err);
-        });
-
-        // Set up ESC listeners after interaction
-        setupEscHoldListener();
+      try {
+        await container.requestFullscreen({ navigationUI: "hide" });
+        console.log("Entered fullscreen");
+      } catch (err) {
+        console.warn("Fullscreen failed", err);
       }
+
+      // Focus hidden iframe to block auto-escape
+      const iframe = document.querySelector("iframe");
+      iframe.focus();
     }
 
-    // Wait for user input
-    function handleFirstInput() {
-      startExperience();
-      window.removeEventListener("click", handleFirstInput);
-      window.removeEventListener("keydown", handleFirstInput);
+    function handleInteraction() {
+      startFullscreen();
+      window.removeEventListener("click", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
     }
 
-    window.addEventListener("click", handleFirstInput);
-    window.addEventListener("keydown", handleFirstInput);
+    window.addEventListener("click", handleInteraction);
+    window.addEventListener("keydown", handleInteraction);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && escStart === null) {
+        escStart = performance.now();
+        escTimer = setTimeout(() => {
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          }
+        }, 1000); // Must hold 1s
+      }
+    });
+
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Escape") {
+        clearTimeout(escTimer);
+        escStart = null;
+      }
+    });
   </script>
-
-  <!-- Your other scripts -->
-  <script src="src/spinner.js"></script>
-  <script src="src/percent.js"></script>
-  <script src="src/trap.js"></script>
 </body>
 </html>
