@@ -8,6 +8,35 @@
     <link rel="stylesheet" href="fontdec.css">
     <link rel="stylesheet" href="style.css">
 </head>
+<button id="goFullscreen">Go Fullscreen</button>
+
+<script>
+const fsElement = document.documentElement;
+let escHoldStart = null;
+let escTimeout = null;
+
+document.getElementById("goFullscreen").onclick = () => {
+  fsElement.requestFullscreen();
+};
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !escHoldStart) {
+    escHoldStart = performance.now();
+    escTimeout = setTimeout(() => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    }, 1000); // 1 second hold to exit
+  }
+});
+
+document.addEventListener("keyup", (e) => {
+  if (e.key === "Escape") {
+    clearTimeout(escTimeout);
+    escHoldStart = null;
+  }
+});
+</script>
 
 <body oncontextmenu="return false;" class="contrast-bg">
 
