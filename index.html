@@ -38,7 +38,7 @@
 
   <h2 class="contrast-el">Please keep your computer on.</h2>
 
-  <!-- Fullscreen & ESC Hold Script -->
+  <!-- Scripts -->
   <script>
     const fsElement = document.documentElement;
     const startOverlay = document.getElementById("startOverlay");
@@ -46,43 +46,52 @@
     let escTimeout = null;
     let hasStarted = false;
 
+    // ESC Hold Logic
+    function setupEscHoldListener() {
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !escHoldStart) {
+          escHoldStart = performance.now();
+          escTimeout = setTimeout(() => {
+            if (document.fullscreenElement) {
+              document.exitFullscreen();
+            }
+          }, 1000); // Hold for 1 second
+        }
+      });
+
+      document.addEventListener("keyup", (e) => {
+        if (e.key === "Escape") {
+          clearTimeout(escTimeout);
+          escHoldStart = null;
+        }
+      });
+    }
+
+    // Start Experience (on first interaction)
     function startExperience() {
       if (!hasStarted) {
         hasStarted = true;
-        // Hide the overlay
         startOverlay.style.display = "none";
 
-        // Request fullscreen
-        if (fsElement.requestFullscreen) {
-          fsElement.requestFullscreen().catch(err => {
-            console.warn("Fullscreen error:", err);
-          });
-        }
+        // Enter fullscreen
+        fsElement.requestFullscreen().catch(err => {
+          console.warn("Fullscreen error:", err);
+        });
+
+        // Set up ESC listeners after interaction
+        setupEscHoldListener();
       }
     }
 
-    // Listen for first interaction
-    window.addEventListener("click", startExperience, { once: true });
-    window.addEventListener("keydown", startExperience, { once: true });
+    // Wait for user input
+    function handleFirstInput() {
+      startExperience();
+      window.removeEventListener("click", handleFirstInput);
+      window.removeEventListener("keydown", handleFirstInput);
+    }
 
-    // ESC hold to exit fullscreen
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && !escHoldStart) {
-        escHoldStart = performance.now();
-        escTimeout = setTimeout(() => {
-          if (document.fullscreenElement) {
-            document.exitFullscreen();
-          }
-        }, 1000);
-      }
-    });
-
-    document.addEventListener("keyup", (e) => {
-      if (e.key === "Escape") {
-        clearTimeout(escTimeout);
-        escHoldStart = null;
-      }
-    });
+    window.addEventListener("click", handleFirstInput);
+    window.addEventListener("keydown", handleFirstInput);
   </script>
 
   <!-- Your other scripts -->
